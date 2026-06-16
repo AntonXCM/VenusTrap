@@ -1,7 +1,4 @@
-# Settings
-TOKEN = "MTUxNjIzOTkyMjE1MzkxODYxNQ.GsEy4Q.iMhXvSdbA1we1zrG9d9M7txQfX3vPCdNaTDgiM"
-
-import trapchannels, stats, globalban, discord, winsound
+import trapchannels, stats, globalban, discord, winsound, os
 
 intents = discord.Intents.none()
 intents.message_content = True
@@ -61,4 +58,4 @@ async def on_message(message: discord.Message):
         except Exception as e:
             await message.reply(f"Error attempting to trap {e}")
 
-client.run(TOKEN)
+client.run(os.environ["Token"])

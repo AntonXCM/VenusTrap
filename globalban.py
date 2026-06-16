@@ -14,7 +14,6 @@ def Load():
         reporters = json.load(f)
 
 def Save():
-    global blacklist
     with open(BLACKLIST_FILE, "w", encoding="utf-8") as f:
         json.dump(blacklist, f, indent=4)
 

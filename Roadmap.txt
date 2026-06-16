@@ -1,2 +1,2 @@
 [x] Mute and warn for old users
-[] Global ban system
+[х] Global ban system
