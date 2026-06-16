@@ -1,7 +1,7 @@
 import discord, stats, pathlib, json
 from datetime import datetime, timedelta, timezone
 
-BLACKLIST_FILE = "stats.json"
+BLACKLIST_FILE = "blacklist.json"
 REPORT_FILE = "trustedreporters.json"
 blacklist = {}
 reporters = []
@@ -51,3 +51,14 @@ def Report(id: str, user: discord.User):
     blacklist[id] = "report"
     Save()
     stats.BanOn(user.guild.id)
+
+async def MemberJoin(member: discord.Member):
+    match blacklist.get(member):
+        case "banned":
+            member.ban("Spambot was already catched")
+            stats.BanOn(member.guild.id)
+        case "warned":
+            member.timeout(timedelta(days=10), "User was already catched in spam bot channel")
+            stats.BanOn(member.guild.id)
+        case "report":
+            member.guild.system_channel.send(content=f"**Warning!** {member.mention} was reported as spammer.")

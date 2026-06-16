@@ -20,6 +20,10 @@ async def on_guild_join(guild: discord.Guild):
     print(guild)
 
 @client.event
+async def on_member_join(member: discord.Member):
+    globalban.MemberJoin(member)
+
+@client.event
 async def on_message(message: discord.Message):
     if message.author.bot:
         return
