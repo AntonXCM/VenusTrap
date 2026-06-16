@@ -1,8 +1,7 @@
 # Settings
 TOKEN = "MTUxNjIzOTkyMjE1MzkxODYxNQ.GsEy4Q.iMhXvSdbA1we1zrG9d9M7txQfX3vPCdNaTDgiM"
 
-from datetime import datetime, timedelta, timezone
-import trapchannels, stats, discord, winsound
+import trapchannels, stats, globalban, discord, winsound
 
 intents = discord.Intents.none()
 intents.message_content = True
@@ -29,31 +28,37 @@ async def on_message(message: discord.Message):
         return
     if message.author.guild_permissions.administrator:
         if message.content.startswith("!addtrap"):
-            if trapchannels.add(message.channel.id):
+            if trapchannels.Add(message.channel.id):
                 await message.reply("The channel is a trap\n# DON'T WRITE ANYTHING IN HERE\n# IT WILL BAN YOU PERMANENTLY IN EVERY SERVER\n# WHERE VENUS HONEYPOT IS LOCATED")
+        
         elif message.content.startswith("!removetrap"):
-            if trapchannels.remove(message.channel.id):
+            if trapchannels.Remove(message.channel.id):
                 await message.reply("The channel is no longer a trap")
+
         elif message.content.startswith("!banstats"):
             if message.content.endswith("all"):
                 await message.reply(stats.GetBanStats([(guild.id, guild.name) for guild in client.guilds]))
             else:
                 await message.reply(f"On server {message.guild.name} was banned {stats.stats.get("guild_bans", {}).get(message.guild.id, 0)} bots")
-    else:
-        if message.channel.id in trapchannels.trapChannels:
-            await trap(message)
-
-async def trap(message: discord.message.Message):
-    member = message.author
-
-    if member.joined_at is None or datetime.now(timezone.utc) - member.joined_at > timedelta(days=30):
-        return
-    print(str(message.guild.self_role.permissions))
-    try:
-        await member.ban(reason=f"Message in trap \"{message.content[:250]}\"")
-        stats.BanOn(message.guild.id)
-    except Exception as e:
-        await message.reply(e)
-
+        
+        elif message.content.startswith("!report "):
+            if message.author.id not in globalban.reporters:
+                await message.reply("You're not trusted to report")
+                return
+            
+            reports = message.content.split(" ")
+            reports.remove("!report")
+            for report in reports:
+                globalban.Report(report, message.author)
+            await message.reply("Thank you for reporting!")
+        
+        elif message.content.startswith("!allbans"):
+            for name, status in globalban.blacklist.values:
+                await message.reply(f"- {str(name)} is {status}")
+    elif message.channel.id in trapchannels.trapChannels:
+        try:
+            await globalban.Trap(message, client.guilds)
+        except Exception as e:
+            await message.reply(f"Error attempting to trap {e}")
 
 client.run(TOKEN)

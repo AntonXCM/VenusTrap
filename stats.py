@@ -4,13 +4,13 @@ STATS_FILE = "stats.json"
 
 stats = {}
 
-def LoadStats():
-	global stats
-	if pathlib.Path(STATS_FILE).exists():
-		with open(STATS_FILE, "r", encoding="utf-8") as f:
-			stats = json.load(f)
+def Load():
+    global stats
+    assert(pathlib.Path(STATS_FILE).exists())
+    with open(STATS_FILE, "r", encoding="utf-8") as f:
+        stats = json.load(f)
 
-def SaveStats():
+def Save():
 	with open(STATS_FILE, "w", encoding="utf-8") as f:
 		json.dump(stats, f, indent=4)
 
@@ -20,9 +20,9 @@ def BanOn(guild_id):
         stats["guild_bans"] = {}
     guild_bans = stats["guild_bans"]
     if guild_id not in guild_bans:
-        guild_bans[guild_id] = 0
-    guild_bans[guild_id] += 1
-    SaveStats()
+        guild_bans[str(guild_id)] = 0
+    guild_bans[str(guild_id)] += 1
+    Save()
 
 def GetBanStats(guilds: list) -> str:
     global stats
@@ -44,4 +44,4 @@ def GetBanStats(guilds: list) -> str:
 def Fixed(text, size):
 	return text + " " * (size - len(text))
 
-LoadStats()
+Load()
