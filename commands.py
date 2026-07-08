@@ -1,4 +1,4 @@
-import discord, traps, stats, globalban
+import discord, traps, stats, globalban, translaions
 from discord import app_commands
 
 client: discord.Client
@@ -6,19 +6,23 @@ client: discord.Client
 @app_commands.default_permissions(administrator=True)
 async def addtrap(interaction: discord.Interaction):
     if traps.add(interaction.channel_id):
-        await interaction.response.send_message("The channel is a trap\n# DON'T WRITE ANYTHING IN HERE\n# IT WILL BAN YOU PERMANENTLY IN EVERY SERVER\n# WHERE VENUS HONEYPOT IS LOCATED")
+        await interaction.response.send_message(translaions.tr("trap", interaction.guild_locale))
 
 @app_commands.default_permissions(administrator=True)
 async def removetrap(interaction: discord.Interaction):
     if traps.remove(interaction.channel_id):
-        await interaction.response.send_message("The channel is no longer a trap `{~v~}`")
+        await interaction.response.send_message(translaions.tr("untrap", interaction.guild_locale))
 
 async def banstats(interaction: discord.Interaction, all: bool = False):
     if all:
         global client
-        await interaction.response.send_message(stats.get_ban_stats_str([(guild.id, guild.name) for guild in client.guilds]))
+        await interaction.response.send_message(
+            translaions.tr("chart1", interaction.locale) + '\n```' +
+            stats.get_ban_stats_str([(guild.id, guild.name) for guild in client.guilds]) +
+            '```\n' + translaions.tr("chart2", interaction.locale),
+            ephemeral=True)
     else:
-        await interaction.response.send_message("_JOOOOO_!!! `{XD}` I háve bánned" + f"{stats.stats.get("guild_bans", {}).get(str(interaction.guild_id), 0)} spámmers ín hére")
+        await interaction.response.send_message(translaions.tr("stats1", interaction.locale) + f" {stats.stats.get("guild_bans", {}).get(str(interaction.guild_id), 0)} " + translaions.tr("stats2", interaction.locale), ephemeral=True)
 
 async def banlist(interaction: discord.Interaction):
     channel = interaction.channel
@@ -29,29 +33,32 @@ async def banlist(interaction: discord.Interaction):
 @app_commands.default_permissions(administrator=True)
 async def report(interaction: discord.Interaction, username: str):
     if interaction.user.id not in globalban.reporters:
-        await interaction.response.send_message("Yóu\\`re nót trústed tó réport, sory `{^ŵ}🗯`")
+        await interaction.response.send_message(translaions.tr("reportfail", interaction.locale), ephemeral=True)
         return
     
     globalban.report(username, interaction.user)
-    await interaction.response.send_message("**OK!** I wíll rémember hím :writing_hand:`{^^J}`")
+    await interaction.response.send_message(translaions.tr("reportsucc", interaction.locale), ephemeral=True)
 
 async def howdoidefend(interaction: discord.Interaction):
-    await interaction.response.send_message(":thinking:")
-    await interaction.channel.send("**Hí!** Its me, ***Venus*** `{^v^⌯}`\n# Thís ís a _advíce líst_ hów dó you maxımíze your défence")
+    await interaction.response.send_message(":thinking:", ephemeral=True)
+    await interaction.channel.send(translaions.tr("guide1", interaction.locale))
 
-    await interaction.channel.send("**𝐅𝐢\U00000301𝐫𝐬𝐭**, máke a __públıc__ chánnel whére __ányone__ cán týpe!\n**Thén**, `/addtrap` tó thát chánnel!")
+    await interaction.channel.send(translaions.tr("guide2", interaction.locale))
 
-    secondline = "**𝐒𝐞\U00000301𝐜𝐨𝐧𝐭**, restríct píngıng **\\@éveryone** ánd róles móst péople hás, fór exámple"
+    secondline = translaions.tr("guide3", interaction.locale)
     users = 1.0 / interaction.guild.member_count
     for role in interaction.guild.roles:
         if role.name == "@everyone":
             continue
-        if len(role.members) * users >= 0.25:
+        if len(role.members) * users >= 0.25 and role.mentionable:
             secondline += f" **\\@{role.name}**,"
-    secondline += "ánd **\\@Venus Trap**.\n thén spámmers cóuld nót píng péople."
+    secondline += translaions.tr("guide4", interaction.locale)
     await interaction.channel.send(secondline)
 
-    await interaction.channel.send("**𝐓𝐡𝐢\U00000301𝐫𝐬𝐭**, `/réport` spámmers. Thén Ì\\`ll knów théy áre dangeróus `{◕‿◕}`")
+    await interaction.channel.send(translaions.tr("guide5", interaction.locale))
+
+async def fakeban(interaction: discord.Interaction):
+    stats.ban_on(interaction.guild_id)
 
 commands = {
     "addtrap": addtrap,
@@ -62,21 +69,13 @@ commands = {
     "howdoidefend": howdoidefend
     }
 
-descriptions = {
-    "addtrap": "Make channel to trap",
-    "removetrap": "Untrap this channel",
-    "banstats": "Show ban stats",
-    "banlist": "Show all banned users",
-    "report": "Report to a user",
-    "howdoidefend": "Explains how to make your server safer!"
-}
-
 async def register_all(p_client: discord.Client):
     global client
     client = p_client
     print("e")
     tree = app_commands.CommandTree(client)
     for i in commands:
-        command = app_commands.Command(name=i, description=descriptions.get(i), callback = commands[i])
+        command = app_commands.Command(name=i, description='/'+i, callback = commands[i])
         tree.add_command(command)
+    await tree.set_translator(translaions.Translator())
     await tree.sync()

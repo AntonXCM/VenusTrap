@@ -1,5 +1,4 @@
-import traps, globalban, discord, winsound, os, commands
-
+import traps, globalban, discord, winsound, os, commands, translaions, website
 intents = discord.Intents.none()
 intents.message_content = True
 intents.guilds = True
@@ -17,6 +16,7 @@ async def on_ready():
 
     print(f"Logged in as {client.user}")
     await commands.register_all(client)
+    website.start(client)
 
 @client.event
 async def on_guild_join(guild: discord.Guild):
@@ -26,9 +26,9 @@ async def on_guild_join(guild: discord.Guild):
 
 async def say_hi(guild: discord.Guild):
     async def say_hi_in(channel: discord.TextChannel):
-        await channel.send("Hewwo ewerywone!! I ám ***Venus***, ánd exíted tó bé hére! **:**3ɔ")
-        await channel.send("My occupáton is spámbot défence! Run `/howdoidefend` tó gét PRO típs!")
-        await channel.send("If you gót addítıonal quéstıons ásk my créator <@809036790416539658>")
+        await channel.send(translaions.tr("hello1", guild.preferred_locale))
+        await channel.send(translaions.tr("hello2", guild.preferred_locale))
+        await channel.send(translaions.tr("hello3", guild.preferred_locale))
     
     member = guild.get_member(client.user.id)
     if guild.system_channel != None and guild.system_channel.permissions_for(member).send_messages:
